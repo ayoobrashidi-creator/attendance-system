@@ -1,0 +1,17 @@
+{
+  "teachers": {
+    "اول": [
+      "بارانه حسینی"
+    ]
+  },
+  "records": [
+    {
+      "sessionId": "g1-p1",
+      "teacherName": "بارانه حسینی",
+      "course": "هوش مصنوعی",
+      "time": "2026-09-10T22:52:04",
+      "status": "تأخیر",
+      "delayMinutes": 892
+    }
+  ]
+}
