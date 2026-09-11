@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حضور و غیاب دوره‌های ضمن خدمت</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=Vazirmatn:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+  :root{
+    --ink:#1B2E3C;
+    --ink-soft:#3E5568;
+    --paper:#EEF1EE;
+    --paper-line:#D7DCD4;
+    --line:#B9C4BC;
+    --seal:#A63D40;
+    --seal-soft:#E9D4D2;
+    --ok:#3F6B4F;
+    --ok-soft:#DCE8DE;
+    --gold:#B08D2B;
+    --card:#FAFAF7;
+    --radius:4px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 27px,
+        var(--paper-line) 28px
+      ),
+      var(--paper);
+    color:var(--ink);
+    font-family:'Vazirmatn', sans-serif;
+    min-height:100vh;
+    padding:0 0 40px;
+  }
+  header{
+    background:var(--ink);
+    color:var(--paper);
+    padding:22px 18px 18px;
+    border-bottom:3px solid var(--gold);
+  }
+  header .eyebrow{
+    font-size:12px;
+    color:#9FB2C0;
+    letter-spacing:.02em;
+    margin:0 0 4px;
+  }
+  header h1{
+    margin:0;
+    font-size:19px;
+    font-weight:700;
+    line-height:1.5;
+  }
+  nav.tabs{
+    display:flex;
+    gap:2px;
+    background:var(--ink);
+    padding:0 12px;
+    overflow-x:auto;
+  }
+  nav.tabs button{
+    appearance:none;
+    border:none;
+    background:transparent;
+    color:#A9BCC9;
+    font-family:inherit;
+    font-size:13.5px;
+    padding:11px 14px;
+    border-radius:6px 6px 0 0;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  nav.tabs button.active{
+    background:var(--paper);
+    color:var(--ink);
+    font-weight:700;
+  }
+  main{
+    max-width:720px;
+    margin:0 auto;
+    padding:20px 16px 0;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px;
+    margin-bottom:16px;
+  }
+  .card h2{
+    margin:0 0 4px;
+    font-size:16px;
+    font-weight:700;
+  }
+  .card .sub{
+    margin:0 0 14px;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .session-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+  .session{
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:#fff;
+    padding:12px;
+    display:flex;
+    gap:12px;
+    align-items:center;
+  }
+  .session img{
+    width:76px;
+    height:76px;
+    flex:none;
+    border:1px solid var(--paper-line);
+    background:#fff;
+  }
+  .session .meta{flex:1; min-width:0;}
+  .session .grade{
+    font-weight:700;
+    font-size:14px;
+  }
+  .session .when{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-top:2px;
+  }
+  .session .code{
+    display:inline-block;
+    margin-top:6px;
+    font-size:11px;
+    color:var(--gold);
+    border:1px solid var(--gold);
+    border-radius:3px;
+    padding:1px 6px;
+    font-family:monospace;
+  }
+  .session button{
+    font-family:inherit;
+    font-size:12px;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:3px;
+    padding:6px 8px;
+    cursor:pointer;
+    color:var(--ink);
+  }
+  .session button:hover{background:var(--paper);}
+  label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    margin:12px 0 5px;
+  }
+  select, input[type=text], textarea{
+    width:100%;
+    font-family:inherit;
+    font-size:14.5px;
+    padding:10px 11px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:#fff;
+    color:var(--ink);
+  }
+  textarea{min-height:90px; resize:vertical;}
+  .radio-row{display:flex; gap:8px; flex-wrap:wrap;}
+  .radio-row label{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-weight:500;
+    border:1px solid var(--line);
+    padding:8px 12px;
+    border-radius:20px;
+    margin:0;
+    cursor:pointer;
+    background:#fff;
+    font-size:13.5px;
+  }
+  .radio-row input{accent-color:var(--seal);}
+  .radio-row label.checked{
+    border-color:var(--seal);
+    background:var(--seal-soft);
+  }
+  .primary-btn{
+    margin-top:16px;
+    width:100%;
+    background:var(--seal);
+    color:#fff;
+    border:none;
+    font-family:inherit;
+    font-size:15px;
+    font-weight:700;
+    padding:13px;
+    border-radius:var(--radius);
+    cursor:pointer;
+  }
+  .primary-btn:active{opacity:.85;}
+  .ghost-btn{
+    background:#fff;
+    border:1px solid var(--line);
+    color:var(--ink);
+    font-family:inherit;
+    font-size:13px;
+    padding:8px 12px;
+    border-radius:var(--radius);
+    cursor:pointer;
+  }
+  .confirm{
+    margin-top:14px;
+    background:var(--ok-soft);
+    border:1px solid var(--ok);
+    color:#1F3B29;
+    padding:12px 14px;
+    border-radius:var(--radius);
+    font-size:13.5px;
+  }
+  .roster{
+    margin-top:14px;
+    border-top:1px dashed var(--line);
+    padding-top:10px;
+  }
+  .roster .row{
+    display:flex;
+    justify-content:space-between;
+    font-size:12.5px;
+    padding:5px 0;
+    border-bottom:1px solid var(--paper-line);
+    color:var(--ink-soft);
+  }
+  .table-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+  table{width:100%; border-collapse:collapse; font-size:12.5px; min-width:760px;}
+  th,td{
+    border-bottom:1px solid var(--paper-line);
+    text-align:right;
+    padding:7px 4px;
+  }
+  th{color:var(--ink-soft); font-weight:600;}
+  .empty{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:13px;
+    padding:20px 0;
+  }
+  .toolbar{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:10px;
+  }
+  .toolbar select{width:auto; flex:1; min-width:110px;}
+  .note{
+    font-size:12px;
+    color:var(--ink-soft);
+    line-height:1.9;
+    background:#fff;
+    border:1px dashed var(--line);
+    border-radius:var(--radius);
+    padding:12px;
+  }
+  .grade-block{margin-bottom:14px;}
+  .grade-block h3{font-size:13.5px; margin:0 0 6px;}
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">دوره‌های ضمن‌خدمت — ریاضیات · فارسی · هوش مصنوعی</p>
+  <h1 id="header-title">حضور و غیاب با کد QR</h1>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="checkin" class="active">ثبت حضور</button>
+  <button data-tab="codes">کدهای QR</button>
+  <button data-tab="report">گزارش</button>
+  <button data-tab="settings">فهرست معلمان</button>
+</nav>
+
+<main id="app"></main>
+
+<script>
+const SESSIONS = [
+  {id:'g1-p1', grade:'اول', day:'شنبه', time:'۸:۰۰ تا ۱۰:۰۰'},
+  {id:'g1-p2', grade:'اول', day:'شنبه', time:'۱۰:۰۰ تا ۱۲:۰۰'},
+  {id:'g2-p1', grade:'دوم', day:'یکشنبه', time:'۸:۰۰ تا ۱۰:۰۰'},
+  {id:'g2-p2', grade:'دوم', day:'یکشنبه', time:'۱۰:۰۰ تا ۱۲:۰۰'},
+  {id:'g3-p1', grade:'سوم', day:'دوشنبه', time:'۸:۰۰ تا ۱۰:۰۰'},
+  {id:'g3-p2', grade:'سوم', day:'دوشنبه', time:'۱۰:۰۰ تا ۱۲:۰۰'},
+  {id:'g4-p1', grade:'چهارم', day:'سه‌شنبه', time:'۸:۰۰ تا ۱۰:۰۰'},
+  {id:'g4-p2', grade:'چهارم', day:'سه‌شنبه', time:'۱۰:۰۰ تا ۱۲:۰۰'},
+  {id:'g5-p1', grade:'پنجم', day:'چهارشنبه', time:'۸:۰۰ تا ۱۰:۰۰'},
+  {id:'g5-p2', grade:'پنجم', day:'چهارشنبه', time:'۱۰:۰۰ تا ۱۲:۰۰'},
+  {id:'g6-p1', grade:'ششم', day:'سه‌شنبه', time:'۱۳:۰۰ تا ۱۵:۰۰'},
+  {id:'g6-p2', grade:'ششم', day:'سه‌شنبه', time:'۱۵:۰۰ تا ۱۷:۰۰'},
+];
+const COURSES = ['ریاضیات','فارسی','هوش مصنوعی'];
+const GRADES = ['اول','دوم','سوم','چهارم','پنجم','ششم'];
+
+let DATA = {teachers:{}, records:[]};
+let ACTIVE_TAB = 'checkin';
+let CHECKIN_SESSION = null;
+
+function sessionById(id){ return SESSIONS.find(s=>s.id===id); }
+
+function toEnglishDigits(str){
+  return String(str)
+    .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+    .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+}
+
+function groupRecords(rows){
+  const map = new Map();
+  rows.forEach(r=>{
+    const s = sessionById(r.sessionId);
+    const day = todayKey(r.time); // e.g. "Fri Sep 11 2026" — stable per-calendar-day key
+    const key = r.teacherName + '|' + day + '|' + (s ? s.grade : '');
+    if(!map.has(key)){
+      map.set(key, {
+        teacherName: r.teacherName,
+        dayLabel: new Date(r.time).toLocaleDateString('fa-IR'),
+        grade: s ? s.grade : '-',
+        personnelCode: '', nationalCode: '', phone: '', address: '', instructor: '',
+        p1: null, p2: null,
+      });
+    }
+    const g = map.get(key);
+    g.personnelCode = g.personnelCode || r.personnelCode || '';
+    g.nationalCode  = g.nationalCode  || r.nationalCode  || '';
+    g.phone         = g.phone         || r.phone         || '';
+    g.address       = g.address       || r.address       || '';
+    g.instructor    = g.instructor    || r.instructor     || '';
+    if(r.sessionId.endsWith('p1')) g.p1 = r; else g.p2 = r;
+  });
+  return Array.from(map.values());
+}
+
+function qrUrl(sessionId){
+  const base = location.href.split('?')[0];
+  const link = base + '?s=' + sessionId;
+  return 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(link);
+}
+
+async function loadData(){
+  try{
+    const res = await fetch('/api/data');
+    DATA = await res.json();
+    DATA.teachers = DATA.teachers || {};
+    DATA.records = DATA.records || [];
+    DATA.teacherProfiles = DATA.teacherProfiles || {};
+  }catch(e){ console.error('load error', e); }
+}
+
+function todayKey(d){ return new Date(d).toDateString(); }
+
+function render(){
+  document.querySelectorAll('#tabs button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.tab===ACTIVE_TAB);
+  });
+  const app = document.getElementById('app');
+  if(ACTIVE_TAB==='checkin') app.innerHTML = renderCheckin();
+  if(ACTIVE_TAB==='codes') app.innerHTML = renderCodes();
+  if(ACTIVE_TAB==='report') app.innerHTML = renderReport();
+  if(ACTIVE_TAB==='settings') app.innerHTML = renderSettings();
+  bindEvents();
+}
+
+function renderCheckin(){
+  const s = CHECKIN_SESSION ? sessionById(CHECKIN_SESSION) : null;
+  let sessionPicker = `
+    <label>زنگ مورد نظر را انتخاب کنید</label>
+    <select id="sessionSelect">
+      <option value="">— انتخاب کنید —</option>
+      ${SESSIONS.map(x=>`<option value="${x.id}" ${CHECKIN_SESSION===x.id?'selected':''}>پایه ${x.grade} — ${x.day} — ${x.time}</option>`).join('')}
+    </select>`;
+
+  if(!s){
+    return `<div class="card"><h2>ثبت حضور</h2><p class="sub">اگر با اسکن کد QR وارد شده باشید، زنگ به‌طور خودکار انتخاب می‌شود. در غیر این صورت از لیست زیر انتخاب کنید.</p>${sessionPicker}</div>`;
+  }
+
+  const roster = DATA.records.filter(r=> r.sessionId===s.id && todayKey(r.time)===todayKey(Date.now()));
+  const names = (DATA.teachers[s.grade]||[]);
+
+  return `
+  <div class="card">
+    <h2>پایه ${s.grade} — ${s.day}</h2>
+    <p class="sub">زنگ ${s.time}</p>
+    ${sessionPicker}
+
+    <label>دوره امروز</label>
+    <div class="radio-row" id="courseRow">
+      ${COURSES.map(c=>`<label><input type="radio" name="course" value="${c}"> ${c}</label>`).join('')}
+    </div>
+
+    <label>نام و نام خانوادگی شما</label>
+    <input type="text" id="teacherName" list="teacherList" placeholder="نام خود را تایپ یا انتخاب کنید">
+    <datalist id="teacherList">
+      ${names.map(n=>`<option value="${n}">`).join('')}
+    </datalist>
+    <div id="reuseNote" style="font-size:12px; color:var(--ok); margin-top:6px;"></div>
+
+    <label>کد پرسنلی</label>
+    <input type="text" id="personnelCode" inputmode="numeric" placeholder="کد پرسنلی خود را وارد کنید">
+
+    <label>کد ملی</label>
+    <input type="text" id="nationalCode" inputmode="numeric" maxlength="10" placeholder="۱۰ رقم، بدون خط تیره">
+
+    <label>تلفن همراه</label>
+    <input type="text" id="phone" inputmode="numeric" placeholder="مثلاً ۰۹۱۲۳۴۵۶۷۸۹">
+
+    <label>آدرس</label>
+    <input type="text" id="address" placeholder="آدرس محل سکونت">
+
+    <label>مدرس این جلسه</label>
+    <input type="text" id="instructor" placeholder="نام مدرس دوره">
+
+    <button class="primary-btn" id="submitBtn">ثبت حضور من</button>
+    <div id="confirmBox"></div>
+
+    <div class="roster">
+      <strong style="font-size:12.5px;">حاضرین ثبت‌شده امروز برای این زنگ (${roster.length} نفر)</strong>
+      ${roster.length ? roster.map(r=>`<div class="row"><span>${r.teacherName} — ${r.course}${r.status==='تأخیر'?` <span style="color:var(--seal); font-weight:600;">(تأخیر ${r.delayMinutes} دقیقه)</span>`:''}</span><span>${new Date(r.time).toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'})}</span></div>`).join('') : '<p class="empty">هنوز کسی ثبت نکرده</p>'}
+    </div>
+  </div>`;
+}
+
+function renderCodes(){
+  const byDay = {};
+  SESSIONS.forEach(s=>{ (byDay[s.day] = byDay[s.day]||[]).push(s); });
+  return `
+  <div class="card">
+    <h2>کدهای QR هر زنگ</h2>
+    <p class="sub">این ۱۲ کد ثابت هستند و هر هفته دوباره قابل استفاده‌اند. چاپ کنید و روی در کلاس/محل برگزاری همان پایه بچسبانید.</p>
+    ${Object.keys(byDay).map(day=>`
+      <div class="grade-block">
+        <h3>${day}</h3>
+        <div class="session-grid">
+          ${byDay[day].map(s=>`
+            <div class="session">
+              <img src="${qrUrl(s.id)}" alt="QR ${s.id}">
+              <div class="meta">
+                <div class="grade">پایه ${s.grade}</div>
+                <div class="when">${s.time}</div>
+                <span class="code">${s.id}</span>
+              </div>
+              <button data-open="${s.id}">بازکردن</button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('')}
+    <div class="note">
+      نکته: برای این‌که گوشیِ معلم‌ها بتواند این کدها را اسکن کند، لپ‌تاپ و گوشی‌ها باید روی یک وای‌فای مشترک باشند و سرور با آدرس IP لپ‌تاپ (نه localhost) اجرا شده باشد.
+    </div>
+  </div>`;
+}
+
+function periodCellHtml(rec){
+  if(!rec) return '<span style="color:var(--ink-soft);">—</span>';
+  const statusHtml = rec.status==='تأخیر'
+    ? `<span style="color:var(--seal); font-weight:600;">تأخیر ${rec.delayMinutes||''} د</span>`
+    : `<span style="color:var(--ok); font-weight:600;">حاضر</span>`;
+  const t = new Date(rec.time).toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'});
+  return `${rec.course}<br>${statusHtml} — ${t}`;
+}
+
+function renderReport(){
+  const gradeFilter = window._gradeFilter || '';
+  let rows = DATA.records.slice();
+  if(gradeFilter) rows = rows.filter(r=> sessionById(r.sessionId)?.grade === gradeFilter);
+  const grouped = groupRecords(rows).sort((a,b)=> (b.p1||b.p2).time.localeCompare((a.p1||a.p2).time));
+
+  return `
+  <div class="card">
+    <h2>گزارش حضور</h2>
+    <div class="toolbar">
+      <select id="gradeFilter">
+        <option value="">همه پایه‌ها</option>
+        ${GRADES.map(g=>`<option value="${g}" ${gradeFilter===g?'selected':''}>پایه ${g}</option>`).join('')}
+      </select>
+      <button class="ghost-btn" id="exportExcel">خروجی اکسل</button>
+    </div>
+    ${grouped.length ? `
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>نام</th><th>کد پرسنلی</th><th>کد ملی</th><th>تلفن</th><th>آدرس</th><th>مدرس</th><th>پایه</th><th>تاریخ</th><th>زنگ اول</th><th>زنگ دوم</th></tr></thead>
+      <tbody>
+        ${grouped.map(g=>`<tr><td>${g.teacherName}</td><td>${g.personnelCode}</td><td>${g.nationalCode}</td><td>${g.phone}</td><td>${g.address}</td><td>${g.instructor}</td><td>${g.grade}</td><td>${g.dayLabel}</td><td>${periodCellHtml(g.p1)}</td><td>${periodCellHtml(g.p2)}</td></tr>`).join('')}
+      </tbody>
+    </table>
+    </div>` : '<p class="empty">هنوز رکوردی ثبت نشده</p>'}
+  </div>`;
+}
+
+function renderSettings(){
+  return `
+  <div class="card">
+    <h2>فهرست معلمان هر پایه</h2>
+    <p class="sub">این فهرست فقط برای پیشنهاد خودکار نام هنگام ثبت حضور است؛ معلم می‌تواند نام خود را دستی هم تایپ کند. هر نام را در یک خط بنویسید.</p>
+    ${GRADES.map(g=>`
+      <label>پایه ${g}</label>
+      <textarea data-grade="${g}" class="teacherBox">${(DATA.teachers[g]||[]).join('\n')}</textarea>
+    `).join('')}
+    <button class="primary-btn" id="saveTeachers">ذخیره فهرست‌ها</button>
+  </div>`;
+}
+
+function bindEvents(){
+  document.querySelectorAll('#tabs button').forEach(b=>{
+    b.onclick = ()=>{ ACTIVE_TAB=b.dataset.tab; render(); };
+  });
+
+  const sSel = document.getElementById('sessionSelect');
+  if(sSel) sSel.onchange = ()=>{ CHECKIN_SESSION = sSel.value || null; render(); };
+
+  const nameField = document.getElementById('teacherName');
+  if(nameField) nameField.addEventListener('change', ()=>{
+    const name = nameField.value.trim();
+    if(!name) return;
+    const grade = CHECKIN_SESSION ? sessionById(CHECKIN_SESSION).grade : null;
+    const profile = DATA.teacherProfiles && DATA.teacherProfiles[name];
+    const sameDayRecord = DATA.records.find(r=>
+      r.teacherName === name &&
+      todayKey(r.time) === todayKey(Date.now()) &&
+      sessionById(r.sessionId)?.grade === grade
+    );
+    const source = sameDayRecord || profile;
+    if(!source) return;
+
+    const fieldMap = {
+      personnelCode: source.personnelCode,
+      nationalCode: source.nationalCode,
+      phone: source.phone,
+      address: source.address,
+      instructor: source.instructor,
+    };
+    Object.keys(fieldMap).forEach(id=>{
+      const el = document.getElementById(id);
+      if(el && fieldMap[id]) el.value = fieldMap[id];
+    });
+
+    const note = document.getElementById('reuseNote');
+    if(note && sameDayRecord){
+      ['personnelCode','nationalCode','phone','address','instructor'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el){ el.readOnly = true; el.style.background = 'var(--paper)'; }
+      });
+      note.innerHTML = `این اطلاعات از زنگ قبلیِ امروزِ شما گرفته شد — فقط دوره را انتخاب و حضورتان را ثبت کنید. <button type="button" id="unlockFields" class="ghost-btn" style="padding:3px 8px; font-size:11px; margin-right:4px;">ویرایش</button>`;
+      document.getElementById('unlockFields').onclick = ()=>{
+        ['personnelCode','nationalCode','phone','address','instructor'].forEach(id=>{
+          const el = document.getElementById(id);
+          if(el){ el.readOnly = false; el.style.background = '#fff'; }
+        });
+        note.innerHTML = '';
+      };
+    }
+  });
+
+  document.querySelectorAll('#courseRow input').forEach(inp=>{
+    inp.onchange = ()=>{
+      document.querySelectorAll('#courseRow label').forEach(l=>l.classList.remove('checked'));
+      inp.closest('label').classList.add('checked');
+    };
+  });
+
+  const submitBtn = document.getElementById('submitBtn');
+  if(submitBtn) submitBtn.onclick = async ()=>{
+    const course = document.querySelector('#courseRow input:checked');
+    const nameInput = document.getElementById('teacherName');
+    const box = document.getElementById('confirmBox');
+
+    const personnelCode = toEnglishDigits(document.getElementById('personnelCode').value.trim());
+    const nationalCode = toEnglishDigits(document.getElementById('nationalCode').value.trim());
+    const phone = toEnglishDigits(document.getElementById('phone').value.trim());
+    const address = document.getElementById('address').value.trim();
+    const instructor = document.getElementById('instructor').value.trim();
+
+    if(!course || !nameInput.value.trim() || !personnelCode || !nationalCode || !phone || !address || !instructor){
+      box.innerHTML = `<div class="confirm" style="background:var(--seal-soft); border-color:var(--seal); color:#5C1E20;">لطفاً همه‌ی فیلدها (دوره، نام، کد پرسنلی، کد ملی، تلفن، آدرس، مدرس) را کامل کنید.</div>`;
+      return;
+    }
+    if(!/^\d{10}$/.test(nationalCode)){
+      box.innerHTML = `<div class="confirm" style="background:var(--seal-soft); border-color:var(--seal); color:#5C1E20;">کد ملی باید دقیقاً ۱۰ رقم باشد.</div>`;
+      return;
+    }
+    const name = nameInput.value.trim();
+    submitBtn.disabled = true;
+    try{
+      const resp = await fetch('/api/checkin', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          sessionId: CHECKIN_SESSION,
+          teacherName: name,
+          course: course.value,
+          grade: sessionById(CHECKIN_SESSION).grade,
+          personnelCode, nationalCode, phone, address, instructor
+        })
+      });
+      const result = await resp.json();
+      if(result.status === 'duplicate'){
+        box.innerHTML = `<div class="confirm">حضور شما قبلاً برای این زنگ ثبت شده — نیازی به ثبت دوباره نیست.</div>`;
+      } else {
+        const rec = result.record || {};
+        const lateNote = rec.status === 'تأخیر' ? ` — با تأخیر ${rec.delayMinutes} دقیقه ثبت شد` : '';
+        box.innerHTML = `<div class="confirm">✅ حضور شما ثبت شد${lateNote} — ${new Date().toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'})}</div>`;
+      }
+      await loadData();
+      render();
+    }catch(e){
+      box.innerHTML = `<div class="confirm" style="background:var(--seal-soft); border-color:var(--seal); color:#5C1E20;">اتصال به سرور برقرار نشد. دوباره تلاش کنید.</div>`;
+    }
+    submitBtn.disabled = false;
+  };
+
+  document.querySelectorAll('[data-open]').forEach(btn=>{
+    btn.onclick = ()=>{ CHECKIN_SESSION = btn.dataset.open; ACTIVE_TAB='checkin'; render(); };
+  });
+
+  const gradeFilter = document.getElementById('gradeFilter');
+  if(gradeFilter) gradeFilter.onchange = ()=>{ window._gradeFilter = gradeFilter.value; render(); };
+
+  const exportBtn = document.getElementById('exportExcel');
+  if(exportBtn) exportBtn.onclick = async ()=>{
+    let rows = DATA.records.slice();
+    const gf = window._gradeFilter;
+    if(gf) rows = rows.filter(r=> sessionById(r.sessionId)?.grade === gf);
+    const grouped = groupRecords(rows).sort((a,b)=> (b.p1||b.p2).time.localeCompare((a.p1||a.p2).time));
+
+    const wb = new ExcelJS.Workbook();
+    const sheet = wb.addWorksheet('حضور و غیاب', { views: [{ rightToLeft: true }] });
+
+    sheet.columns = [
+      { header:'نام و نام خانوادگی', key:'name', width:22 },
+      { header:'کد پرسنلی', key:'personnelCode', width:14 },
+      { header:'کد ملی', key:'nationalCode', width:14 },
+      { header:'تلفن همراه', key:'phone', width:15 },
+      { header:'آدرس', key:'address', width:26 },
+      { header:'مدرس', key:'instructor', width:18 },
+      { header:'پایه', key:'grade', width:9 },
+      { header:'تاریخ', key:'day', width:14 },
+      { header:'زنگ اول - دوره', key:'p1course', width:14 },
+      { header:'زنگ اول - وضعیت', key:'p1status', width:16 },
+      { header:'زنگ اول - ساعت', key:'p1time', width:12 },
+      { header:'زنگ دوم - دوره', key:'p2course', width:14 },
+      { header:'زنگ دوم - وضعیت', key:'p2status', width:16 },
+      { header:'زنگ دوم - ساعت', key:'p2time', width:12 },
+    ];
+
+    const periodStatus = rec => rec ? (rec.status==='تأخیر' ? `تأخیر (${rec.delayMinutes} دقیقه)` : 'حاضر') : '—';
+    const periodTime = rec => rec ? new Date(rec.time).toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'}) : '—';
+
+    grouped.forEach(g=>{
+      sheet.addRow({
+        name: g.teacherName,
+        personnelCode: g.personnelCode,
+        nationalCode: g.nationalCode,
+        phone: g.phone,
+        address: g.address,
+        instructor: g.instructor,
+        grade: g.grade,
+        day: g.dayLabel,
+        p1course: g.p1 ? g.p1.course : '—',
+        p1status: periodStatus(g.p1),
+        p1time: periodTime(g.p1),
+        p2course: g.p2 ? g.p2.course : '—',
+        p2status: periodStatus(g.p2),
+        p2time: periodTime(g.p2),
+      });
+    });
+
+    const headerRow = sheet.getRow(1);
+    headerRow.eachCell(cell=>{
+      cell.font = { bold:true, color:{ argb:'FFFFFFFF' } };
+      cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FF1B2E3C' } };
+      cell.alignment = { horizontal:'center', vertical:'middle' };
+    });
+    sheet.eachRow((row, i)=>{
+      row.eachCell(cell=>{
+        cell.border = {
+          top:{style:'thin', color:{argb:'FFD7DCD4'}},
+          bottom:{style:'thin', color:{argb:'FFD7DCD4'}},
+          left:{style:'thin', color:{argb:'FFD7DCD4'}},
+          right:{style:'thin', color:{argb:'FFD7DCD4'}},
+        };
+        if(i>1) cell.alignment = { horizontal:'right', vertical:'middle' };
+      });
+    });
+    sheet.views = [{ state:'frozen', ySplit:1, rightToLeft:true }];
+
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'attendance-report.xlsx';
+    a.click();
+  };
+
+  const saveTeachersBtn = document.getElementById('saveTeachers');
+  if(saveTeachersBtn) saveTeachersBtn.onclick = async ()=>{
+    const boxes = Array.from(document.querySelectorAll('.teacherBox'));
+    for(const ta of boxes){
+      const g = ta.dataset.grade;
+      const names = ta.value.split('\n').map(x=>x.trim()).filter(Boolean);
+      DATA.teachers[g] = names;
+      await fetch('/api/teachers', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({grade:g, names})
+      });
+    }
+    saveTeachersBtn.textContent = 'ذخیره شد ✓';
+    setTimeout(()=> saveTeachersBtn.textContent='ذخیره فهرست‌ها', 1500);
+  };
+}
+
+(async function init(){
+  await loadData();
+  const params = new URLSearchParams(location.search);
+  const s = params.get('s');
+  if(s && sessionById(s)){ CHECKIN_SESSION = s; ACTIVE_TAB='checkin'; }
+  render();
+})();
+</script>
+</body>
+</html>
