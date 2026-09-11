@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حضور و غیاب دوره‌های ضمن خدمت</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#1B2E3C; --ink-soft:#3E5568; --paper:#EEF1EE; --paper-line:#D7DCD4; --line:#B9C4BC;
+    --seal:#A63D40; --seal-soft:#E9D4D2; --ok:#3F6B4F; --ok-soft:#DCE8DE; --gold:#B08D2B; --card:#FAFAF7; --radius:4px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{ background: repeating-linear-gradient(to bottom, transparent, transparent 27px, var(--paper-line) 28px), var(--paper); color:var(--ink); font-family:'Vazirmatn', sans-serif; min-height:100vh; padding:0 0 40px; }
+
+  .credit-banner{ text-align:center; background:var(--ink); color:var(--gold); font-weight:700; font-size:13px; padding:9px 10px; animation: blinkGlow 1.7s ease-in-out infinite; }
+  @keyframes blinkGlow{ 0%,100%{opacity:1;} 50%{opacity:.4;} }
+
+  header{ background:var(--ink); color:var(--paper); padding:16px 18px 14px; border-bottom:3px solid var(--gold); }
+  header .eyebrow{ font-size:12px; color:#9FB2C0; margin:0 0 4px; }
+  header h1{ margin:0; font-size:18px; font-weight:700; line-height:1.5; }
+  header .sched{ font-size:12px; color:#B7C6D0; margin-top:6px; line-height:1.8; }
+
+  .admin-bar{ background:#12212C; padding:7px 14px; display:flex; align-items:center; justify-content:flex-end; gap:8px; font-size:12px; color:#9FB2C0; flex-wrap:wrap; }
+  .admin-bar input{ font-family:inherit; font-size:12.5px; padding:6px 8px; border-radius:3px; border:1px solid #3A4B58; width:120px; }
+  .admin-bar .err{ color:#F0A6A8; font-size:11px; width:100%; text-align:left; }
+
+  nav.tabs{ display:flex; gap:2px; background:var(--ink); padding:0 12px; overflow-x:auto; }
+  nav.tabs button{ appearance:none; border:none; background:transparent; color:#A9BCC9; font-family:inherit; font-size:13px; padding:11px 13px; border-radius:6px 6px 0 0; cursor:pointer; white-space:nowrap; }
+  nav.tabs button.active{ background:var(--paper); color:var(--ink); font-weight:700; }
+
+  main{ max-width:1000px; margin:0 auto; padding:20px 16px 0; }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px; margin-bottom:16px; }
+  .card h2{ margin:0 0 4px; font-size:16px; font-weight:700; }
+  .card .sub{ margin:0 0 14px; font-size:13px; color:var(--ink-soft); }
+
+  .section-label{ font-size:12.5px; font-weight:700; color:var(--ink-soft); border-bottom:1px dashed var(--line); padding-bottom:6px; margin:18px 0 4px; }
+  .section-label:first-of-type{ margin-top:4px; }
+
+  label{ display:block; font-size:12.5px; font-weight:600; margin:10px 0 4px; }
+  select, input[type=text], input[type=number], input[type=password], textarea{
+    width:100%; font-family:inherit; font-size:14px; padding:9px 10px; border:1px solid var(--line); border-radius:var(--radius); background:#fff; color:var(--ink);
+  }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:0 10px; }
+  @media(max-width:480px){ .grid2{ grid-template-columns:1fr; } }
+
+  .radio-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .radio-row label{ display:flex; align-items:center; gap:6px; font-weight:500; border:1px solid var(--line); padding:8px 12px; border-radius:20px; margin:0; cursor:pointer; background:#fff; font-size:13px; }
+  .radio-row input{ accent-color:var(--seal); }
+  .radio-row label.checked{ border-color:var(--seal); background:var(--seal-soft); }
+
+  .primary-btn{ margin-top:18px; width:100%; background:var(--seal); color:#fff; border:none; font-family:inherit; font-size:15px; font-weight:700; padding:13px; border-radius:var(--radius); cursor:pointer; }
+  .primary-btn:disabled{ opacity:.5; cursor:not-allowed; }
+  .ghost-btn{ background:#fff; border:1px solid var(--line); color:var(--ink); font-family:inherit; font-size:12.5px; padding:8px 12px; border-radius:var(--radius); cursor:pointer; }
+  .confirm{ margin-top:14px; background:var(--ok-soft); border:1px solid var(--ok); color:#1F3B29; padding:12px 14px; border-radius:var(--radius); font-size:13px; }
+  .warn{ margin-top:14px; background:var(--seal-soft); border:1px solid var(--seal); color:#5C1E20; padding:12px 14px; border-radius:var(--radius); font-size:13px; }
+  .info-line{ margin:10px 0; font-size:12.5px; color:var(--ink-soft); }
+  .reuse-note{ font-size:12px; color:var(--ok); margin:8px 0; }
+
+  .toolbar{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+  .toolbar select{ width:auto; flex:1; min-width:120px; }
+
+  .table-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--line); border-radius:var(--radius); }
+  table{ border-collapse:separate; border-spacing:0; font-size:12px; }
+  thead th{ background:var(--card); color:var(--ink-soft); font-weight:700; text-align:right; padding:8px 6px; border-bottom:2px solid var(--gold); white-space:nowrap; }
+  tbody td{ padding:7px 6px; border-bottom:1px solid var(--paper-line); text-align:right; background:var(--card); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  tbody tr:nth-child(even) td{ background:#F2F3EF; }
+  .sticky-col{ position:sticky; z-index:2; }
+  thead .sticky-col{ z-index:3; }
+  .sticky-col.sticky-last{ box-shadow:-6px 0 6px -6px rgba(0,0,0,.28); }
+  .empty{ text-align:center; color:var(--ink-soft); font-size:13px; padding:20px 0; }
+
+  .dash-title{ font-size:17px; font-weight:800; margin-bottom:4px; }
+  .kpi-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:14px 0; }
+  @media(max-width:640px){ .kpi-grid{ grid-template-columns:1fr 1fr; } }
+  .kpi-box{ background:#fff; border-radius:6px; padding:14px 10px; text-align:center; border-top:4px solid var(--ink); box-shadow:0 1px 3px rgba(0,0,0,.06); }
+  .kpi-navy{ border-color:var(--ink); } .kpi-green{ border-color:var(--ok); } .kpi-red{ border-color:var(--seal); } .kpi-gold{ border-color:var(--gold); }
+  .kpi-num{ font-size:24px; font-weight:800; }
+  .kpi-label{ font-size:11.5px; color:var(--ink-soft); margin-top:2px; }
+  .progress-track{ height:6px; background:var(--paper-line); border-radius:4px; margin-top:8px; overflow:hidden; }
+  .progress-fill{ height:100%; background:var(--gold); }
+
+  .course-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
+  @media(max-width:640px){ .course-grid{ grid-template-columns:1fr; } }
+  .course-box{ border-radius:6px; padding:14px; text-align:center; color:#fff; }
+  .course-0{ background:linear-gradient(135deg,#A63D40,#c25659); }
+  .course-1{ background:linear-gradient(135deg,#3E5568,#547089); }
+  .course-2{ background:linear-gradient(135deg,#3F6B4F,#568f68); }
+  .course-name{ font-size:13px; font-weight:700; }
+  .course-count{ font-size:22px; font-weight:800; margin-top:4px; }
+  .top-line{ background:#fff; border:1px dashed var(--gold); border-radius:6px; padding:10px 14px; font-size:13px; margin-bottom:14px; }
+  .charts-grid{ display:grid; grid-template-columns:1.3fr 1fr; gap:14px; }
+  @media(max-width:720px){ .charts-grid{ grid-template-columns:1fr; } }
+  .chart-box{ background:#fff; border:1px solid var(--line); border-radius:6px; padding:12px; }
+</style>
+</head>
+<body>
+
+<div class="credit-banner">طراح و برنامه‌نویس: مهندس ایوب رشیدی &nbsp;|&nbsp; تماس: ۰۹۳۸۰۳۵۶۸۷۸</div>
+
+<header>
+  <p class="eyebrow">دوره‌های ضمن‌خدمت — ریاضیات · فارسی · هوش مصنوعی</p>
+  <h1>حضور و غیاب با کد QR</h1>
+  <p class="sched">۲۱ تا ۳۰ شهریور ۱۴۰۵ — زنگ اول ۸:۰۰ تا ۱۰:۰۰ ، استراحت ۱۰:۰۰ تا ۱۰:۳۰ ، زنگ دوم ۱۰:۳۰ تا ۱۲:۳۰</p>
+</header>
+
+<div id="adminBar"></div>
+<nav class="tabs" id="tabs" style="display:none;">
+  <button data-tab="checkin" class="active">ثبت‌نام</button>
+  <button data-tab="codes">QR ورود</button>
+  <button data-tab="report">گزارش</button>
+  <button data-tab="dashboard">داشبورد</button>
+  <button data-tab="admin">مدیریت</button>
+</nav>
+
+<main id="app"></main>
+
+<script>
+const GRADES = ['اول','دوم','سوم','چهارم','پنجم','ششم'];
+const COURSES = ['ریاضیات','فارسی','هوش مصنوعی'];
+const DEGREES = ['دیپلم','کاردانی','کارشناسی','کارشناسی ارشد','دکتری'];
+const MARITAL = ['مجرد','متأهل'];
+const GENDERS = ['مرد','زن'];
+const PERIODS = [
+  {id:'p1', label:'زنگ اول', time:'۸:۰۰ تا ۱۰:۰۰'},
+  {id:'p2', label:'زنگ دوم', time:'۱۰:۳۰ تا ۱۲:۳۰'},
+];
+const SESSION_DATES = [
+  {jalali:'1405/06/21', gregorian:'2026-09-12', label:'شنبه ۲۱ شهریور ۱۴۰۵'},
+  {jalali:'1405/06/22', gregorian:'2026-09-13', label:'یکشنبه ۲۲ شهریور ۱۴۰۵'},
+  {jalali:'1405/06/23', gregorian:'2026-09-14', label:'دوشنبه ۲۳ شهریور ۱۴۰۵'},
+  {jalali:'1405/06/24', gregorian:'2026-09-15', label:'سه‌شنبه ۲۴ شهریور ۱۴۰۵'},
+  {jalali:'1405/06/25', gregorian:'2026-09-16', label:'چهارشنبه ۲۵ شهریور ۱۴۰۵'},
+  {jalali:'1405/06/26', gregorian:'2026-09-17', label:'پنجشنبه ۲۶ شهریور ۱۴۰۵'},
+  {jalali:'1405/06/27', gregorian:'2026-09-18', label:'جمعه ۲۷ شهریور ۱۴۰۵'},
+  {jalali:'1405/06/28', gregorian:'2026-09-19', label:'شنبه ۲۸ شهریور ۱۴۰۵'},
+  {jalali:'1405/06/29', gregorian:'2026-09-20', label:'یکشنبه ۲۹ شهریور ۱۴۰۵'},
+  {jalali:'1405/06/30', gregorian:'2026-09-21', label:'دوشنبه ۳۰ شهریور ۱۴۰۵'},
+];
+
+const STICKY_COLS = [
+  {key:'row', label:'ردیف', width:44}, {key:'firstName', label:'نام', width:80},
+  {key:'lastName', label:'نام خانوادگی', width:104}, {key:'grade', label:'پایه', width:56},
+  {key:'sessionDateLabel', label:'تاریخ', width:150}, {key:'periodLabel', label:'زنگ', width:80},
+  {key:'course', label:'دوره', width:96}, {key:'instructor', label:'مدرس', width:110},
+  {key:'statusLabel', label:'وضعیت', width:110},
+];
+const SCROLL_COLS = [
+  {key:'personnelCode', label:'کد پرسنلی', width:90}, {key:'nationalCode', label:'کد ملی', width:90},
+  {key:'gender', label:'جنسیت', width:64}, {key:'birthDate', label:'تاریخ تولد', width:100},
+  {key:'maritalStatus', label:'وضعیت تأهل', width:90}, {key:'orgPosition', label:'سمت سازمانی', width:130},
+  {key:'degree', label:'مدرک تحصیلی', width:110}, {key:'teachingExperience', label:'سابقه تدریس', width:90},
+  {key:'phone', label:'تلفن همراه', width:110}, {key:'workAddress', label:'آدرس محل کار', width:170},
+  {key:'homeAddress', label:'آدرس منزل', width:170}, {key:'submittedTime', label:'ساعت ثبت', width:90},
+  {key:'distanceMeters', label:'فاصله (متر)', width:90},
+];
+const ALL_COLS = STICKY_COLS.concat(SCROLL_COLS);
+
+let ADMIN_TOKEN = localStorage.getItem('adminToken');
+let ADMIN_USERNAME = localStorage.getItem('adminUsername') || '';
+let SHOW_LOGIN = false;
+let ADMIN_DATA = {records:[], teacherProfiles:{}};
+
+let ACTIVE_TAB = 'checkin';
+let CHARTS = {bar:null, donut:null};
+let USER_LOCATION = null;
+let LOCATION_ERROR = null;
+let VENUE_CONFIG = null;
+
+function toEnglishDigits(str){
+  return String(str).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+}
+function toFa(n){ return String(n).replace(/[0-9]/g, d=>'۰۱۲۳۴۵۶۷۸۹'[d]); }
+function downloadBlob(bufferOrBlob, filename, mime){
+  const blob = bufferOrBlob instanceof Blob ? bufferOrBlob : new Blob([bufferOrBlob], {type:mime});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function qrUrl(targetUrl){ return 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(targetUrl); }
+function authHeaders(){ return ADMIN_TOKEN ? {Authorization:'Bearer '+ADMIN_TOKEN} : {}; }
+
+function haversineMeters(lat1,lng1,lat2,lng2){
+  const R=6371000, toRad=d=>d*Math.PI/180;
+  const dphi=toRad(lat2-lat1), dlambda=toRad(lng2-lng1);
+  const a = Math.sin(dphi/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dlambda/2)**2;
+  return 2*R*Math.asin(Math.sqrt(a));
+}
+
+/* ---------- geolocation ---------- */
+async function loadVenueConfig(){
+  try{ const res = await fetch('/api/venue'); VENUE_CONFIG = await res.json(); }catch(e){ console.error(e); }
+}
+function requestLocation(){
+  LOCATION_ERROR = null;
+  if(!navigator.geolocation){ LOCATION_ERROR = 'مرورگر شما از موقعیت مکانی پشتیبانی نمی‌کند.'; render(); return; }
+  navigator.geolocation.getCurrentPosition(
+    pos=>{ USER_LOCATION = {lat:pos.coords.latitude, lng:pos.coords.longitude}; render(); },
+    err=>{ LOCATION_ERROR = err.code===1 ? 'اجازه‌ی دسترسی به موقعیت مکانی داده نشد. لطفاً آن را فعال کنید و دوباره تلاش کنید.' : 'دریافت موقعیت مکانی ناموفق بود.'; render(); },
+    { enableHighAccuracy:true, timeout:15000, maximumAge:0 }
+  );
+}
+function locationStatusHtml(){
+  if(LOCATION_ERROR) return `<div class="warn">📍 ${LOCATION_ERROR} <button type="button" id="retryLocation" class="ghost-btn" style="margin-right:6px;">تلاش مجدد</button></div>`;
+  if(!USER_LOCATION) return `<div class="info-line">📍 در حال دریافت موقعیت مکانی شما…</div>`;
+  if(VENUE_CONFIG){
+    const dist = Math.round(haversineMeters(USER_LOCATION.lat, USER_LOCATION.lng, VENUE_CONFIG.venueLat, VENUE_CONFIG.venueLng));
+    if(dist > VENUE_CONFIG.radiusMeters) return `<div class="warn">📍 شما حدود ${toFa(dist)} متر با محل برگزاری فاصله دارید — خارج از محدوده‌ی مجاز (${toFa(VENUE_CONFIG.radiusMeters)} متر). ثبت‌نام فقط از محل برگزاری ممکن است.</div>`;
+    return `<div class="confirm">📍 موقعیت شما تأیید شد (حدود ${toFa(dist)} متر تا محل).</div>`;
+  }
+  return `<div class="confirm">📍 موقعیت مکانی دریافت شد.</div>`;
+}
+function isWithinRange(){
+  if(!USER_LOCATION || !VENUE_CONFIG) return false;
+  return haversineMeters(USER_LOCATION.lat, USER_LOCATION.lng, VENUE_CONFIG.venueLat, VENUE_CONFIG.venueLng) <= VENUE_CONFIG.radiusMeters;
+}
+
+/* ---------- CHECK-IN ---------- */
+function renderCheckin(){
+  return `
+  <div class="card">
+    <h2>ثبت‌نام و حضور معلم</h2>
+    <p class="sub">دوره‌های ضمن‌خدمت ریاضیات، فارسی و هوش مصنوعی — ۲۱ تا ۳۰ شهریور ۱۴۰۵</p>
+    ${locationStatusHtml()}
+
+    <div class="section-label">اطلاعات جلسه</div>
+    <div class="grid2">
+      <div><label>پایه</label><select id="grade"><option value="">— انتخاب کنید —</option>${GRADES.map(g=>`<option value="${g}">پایه ${g}</option>`).join('')}</select></div>
+      <div><label>تاریخ جلسه</label><select id="sessionDate"><option value="">— انتخاب کنید —</option>${SESSION_DATES.map(d=>`<option value="${d.jalali}">${d.label}</option>`).join('')}</select></div>
+    </div>
+
+    <label>زنگ</label>
+    <div class="radio-row" id="periodRow">${PERIODS.map(p=>`<label><input type="radio" name="period" value="${p.id}"> ${p.label} (${p.time})</label>`).join('')}</div>
+
+    <label>نام دوره</label>
+    <div class="radio-row" id="courseRow">${COURSES.map(c=>`<label><input type="radio" name="course" value="${c}"> ${c}</label>`).join('')}</div>
+
+    <label>مدرس دوره</label>
+    <input type="text" id="instructor" placeholder="نام مدرس این جلسه">
+
+    <div class="section-label">اطلاعات فردی معلم</div>
+    <div class="grid2">
+      <div><label>نام</label><input type="text" id="firstName"></div>
+      <div><label>نام خانوادگی</label><input type="text" id="lastName"></div>
+    </div>
+    <div id="reuseNote" class="reuse-note"></div>
+
+    <div class="grid2">
+      <div><label>کد پرسنلی</label><input type="text" id="personnelCode" inputmode="numeric"></div>
+      <div><label>کد ملی</label><input type="text" id="nationalCode" inputmode="numeric" maxlength="10"></div>
+    </div>
+    <div class="grid2">
+      <div><label>جنسیت</label><select id="gender"><option value="">— انتخاب —</option>${GENDERS.map(g=>`<option value="${g}">${g}</option>`).join('')}</select></div>
+      <div><label>تاریخ تولد</label><input type="text" id="birthDate" placeholder="مثلاً ۱۳۶۵/۰۳/۱۲"></div>
+    </div>
+    <div class="grid2">
+      <div><label>وضعیت تأهل</label><select id="maritalStatus"><option value="">— انتخاب —</option>${MARITAL.map(m=>`<option value="${m}">${m}</option>`).join('')}</select></div>
+      <div><label>سمت سازمانی</label><input type="text" id="orgPosition" placeholder="مثلاً معلم پایه چهارم"></div>
+    </div>
+    <div class="grid2">
+      <div><label>مدرک تحصیلی</label><select id="degree"><option value="">— انتخاب —</option>${DEGREES.map(d=>`<option value="${d}">${d}</option>`).join('')}</select></div>
+      <div><label>سابقه تدریس (سال)</label><input type="number" id="teachingExperience" min="0" max="45"></div>
+    </div>
+    <label>تلفن همراه</label><input type="text" id="phone" inputmode="numeric" placeholder="مثلاً ۰۹۱۲۳۴۵۶۷۸۹">
+    <label>آدرس محل کار</label><input type="text" id="workAddress">
+    <label>آدرس منزل</label><input type="text" id="homeAddress">
+
+    <button class="primary-btn" id="submitBtn" ${isWithinRange() ? '' : 'disabled'}>ثبت حضور من</button>
+    <div id="confirmBox"></div>
+  </div>`;
+}
+
+/* ---------- QR (single, admin-only) ---------- */
+function renderCodes(){
+  const base = location.href.split('?')[0];
+  return `
+  <div class="card">
+    <h2>کد QR ورود (تنها کد سیستم)</h2>
+    <p class="sub">معلمان با اسکن همین یک کد مستقیم وارد فرم ثبت‌نام می‌شوند و پایه/تاریخ/زنگ/دوره را خودشان انتخاب می‌کنند. ثبت‌نام فقط در محدوده‌ی مجاز اطراف محل برگزاری فعال است.</p>
+    <div style="text-align:center; padding:16px;">
+      <img src="${qrUrl(base)}" style="width:220px; height:220px;">
+      <div style="margin-top:10px; font-size:12px; color:var(--ink-soft); word-break:break-all;">${base}</div>
+    </div>
+  </div>`;
+}
+
+/* ---------- REPORT ---------- */
+function statusBadge(r){
+  if(r.status==='تأخیر') return `<span style="color:var(--seal); font-weight:700;">تأخیر (${toFa(r.delayMinutes)} د)</span>`;
+  if(r.status==='حاضر') return `<span style="color:var(--ok); font-weight:700;">حاضر</span>`;
+  return `<span style="color:var(--ink-soft); font-weight:600;">ثبت‌شده</span>`;
+}
+function buildRowDisplay(r, idx){
+  const period = PERIODS.find(p=>p.id===r.period);
+  const dateInfo = SESSION_DATES.find(d=>d.jalali===r.sessionDate);
+  return Object.assign({}, r, {
+    row: toFa(idx+1), sessionDateLabel: dateInfo?dateInfo.label:r.sessionDate, periodLabel: period?period.label:r.period,
+    statusLabel: statusBadge(r), submittedTime: new Date(r.submittedAt).toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'}),
+    distanceMeters: r.distanceMeters!==undefined ? toFa(r.distanceMeters) : '',
+  });
+}
+function stickyOffsets(){ let acc=0; return STICKY_COLS.map(c=>{ const off=acc; acc+=c.width; return off; }); }
+function reportHeaderRow(){
+  const offsets = stickyOffsets();
+  const stickyTh = STICKY_COLS.map((c,i)=>`<th class="sticky-col${i===STICKY_COLS.length-1?' sticky-last':''}" style="right:${offsets[i]}px; width:${c.width}px; min-width:${c.width}px;">${c.label}</th>`).join('');
+  const scrollTh = SCROLL_COLS.map(c=>`<th style="width:${c.width}px; min-width:${c.width}px;">${c.label}</th>`).join('');
+  return stickyTh + scrollTh;
+}
+function reportRowHtml(g){
+  const offsets = stickyOffsets();
+  const stickyTd = STICKY_COLS.map((c,i)=>`<td class="sticky-col${i===STICKY_COLS.length-1?' sticky-last':''}" style="right:${offsets[i]}px; width:${c.width}px;">${g[c.key] ?? ''}</td>`).join('');
+  const scrollTd = SCROLL_COLS.map(c=>`<td style="width:${c.width}px;">${g[c.key] ?? ''}</td>`).join('');
+  return `<tr>${stickyTd}${scrollTd}</tr>`;
+}
+function getReportFilters(){ return window._reportFilters || {grade:'', date:'', course:''}; }
+function filteredRecords(f){
+  let rows = ADMIN_DATA.records.slice();
+  if(f.grade) rows = rows.filter(r=>r.grade===f.grade);
+  if(f.date) rows = rows.filter(r=>r.sessionDate===f.date);
+  if(f.course) rows = rows.filter(r=>r.course===f.course);
+  rows.sort((a,b)=> b.submittedAt.localeCompare(a.submittedAt));
+  return rows;
+}
+function renderReport(){
+  const f = getReportFilters();
+  const rows = filteredRecords(f);
+  const totalWidth = ALL_COLS.reduce((s,c)=>s+c.width,0);
+  const displayRows = rows.map(buildRowDisplay);
+  return `
+  <div class="card">
+    <h2>گزارش حضور و غیاب</h2>
+    <div class="toolbar">
+      <select id="filterGrade"><option value="">همه پایه‌ها</option>${GRADES.map(g=>`<option value="${g}" ${f.grade===g?'selected':''}>پایه ${g}</option>`).join('')}</select>
+      <select id="filterDate"><option value="">همه تاریخ‌ها</option>${SESSION_DATES.map(d=>`<option value="${d.jalali}" ${f.date===d.jalali?'selected':''}>${d.label}</option>`).join('')}</select>
+      <select id="filterCourse"><option value="">همه دوره‌ها</option>${COURSES.map(c=>`<option value="${c}" ${f.course===c?'selected':''}>${c}</option>`).join('')}</select>
+      <button class="ghost-btn" id="exportExcel">خروجی اکسل</button>
+    </div>
+    ${displayRows.length ? `
+    <div class="table-wrap"><table style="width:${totalWidth}px;"><thead><tr>${reportHeaderRow()}</tr></thead><tbody>${displayRows.map(reportRowHtml).join('')}</tbody></table></div>
+    <p class="sub" style="margin-top:8px;">تعداد رکورد: ${toFa(displayRows.length)}</p>
+    ` : '<p class="empty">هنوز رکوردی ثبت نشده</p>'}
+  </div>`;
+}
+
+/* ---------- DASHBOARD ---------- */
+function defaultDashboardDate(){
+  const todayIso = new Date().toISOString().slice(0,10);
+  const match = SESSION_DATES.find(d=> d.gregorian === todayIso);
+  return match ? match.jalali : '';
+}
+function computeDashboardStats(dateFilter){
+  let rows = ADMIN_DATA.records.slice();
+  if(dateFilter) rows = rows.filter(r=> r.sessionDate === dateFilter);
+  const total = rows.length;
+  const onTime = rows.filter(r=> r.status==='حاضر').length;
+  const late = rows.filter(r=> r.status==='تأخیر').length;
+  const pct = total ? Math.round((onTime/total)*100) : 0;
+  const byGrade = {}; GRADES.forEach(g=> byGrade[g]=0);
+  rows.forEach(r=> { if(byGrade[r.grade]!==undefined) byGrade[r.grade]++; });
+  const byCourse = {}; COURSES.forEach(c=> byCourse[c]=0);
+  rows.forEach(r=> { if(byCourse[r.course]!==undefined) byCourse[r.course]++; });
+  let topGrade='-', topCount=-1;
+  Object.keys(byGrade).forEach(g=>{ if(byGrade[g]>topCount){ topCount=byGrade[g]; topGrade=g; } });
+  return {total, onTime, late, pct, byGrade, byCourse, topGrade, topCount};
+}
+function renderDashboard(){
+  if(window._dashDate === undefined) window._dashDate = defaultDashboardDate();
+  const dateFilter = window._dashDate;
+  const stats = computeDashboardStats(dateFilter);
+  return `
+  <div class="card" id="dashboardCapture">
+    <div class="dash-title">داشبورد حضور و غیاب — دوره‌های ضمن‌خدمت</div>
+    <p class="sub">${dateFilter ? (SESSION_DATES.find(d=>d.jalali===dateFilter)||{}).label : 'نمای کلی همه‌ی تاریخ‌ها'}</p>
+    <div class="toolbar">
+      <select id="dashDate"><option value="">همه تاریخ‌ها</option>${SESSION_DATES.map(d=>`<option value="${d.jalali}" ${dateFilter===d.jalali?'selected':''}>${d.label}</option>`).join('')}</select>
+      <button class="ghost-btn" id="exportDashExcel">خروجی اکسل</button>
+      <button class="ghost-btn" id="exportDashPdf">خروجی PDF</button>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-box kpi-navy"><div class="kpi-num">${toFa(stats.total)}</div><div class="kpi-label">کل ثبت‌نام‌ها</div></div>
+      <div class="kpi-box kpi-green"><div class="kpi-num">${toFa(stats.onTime)}</div><div class="kpi-label">حاضر به‌موقع</div></div>
+      <div class="kpi-box kpi-red"><div class="kpi-num">${toFa(stats.late)}</div><div class="kpi-label">با تأخیر</div></div>
+      <div class="kpi-box kpi-gold"><div class="kpi-num">${toFa(stats.pct)}٪</div><div class="kpi-label">درصد به‌موقع بودن</div><div class="progress-track"><div class="progress-fill" style="width:${stats.pct}%;"></div></div></div>
+    </div>
+    <div class="course-grid">${COURSES.map((c,i)=>`<div class="course-box course-${i}"><div class="course-name">${c}</div><div class="course-count">${toFa(stats.byCourse[c]||0)}</div></div>`).join('')}</div>
+    <div class="top-line">🏆 پایه با بیشترین شرکت‌کننده: <strong>${stats.topGrade!=='-' ? 'پایه '+stats.topGrade : '—'}</strong> ${stats.topCount>0 ? '('+toFa(stats.topCount)+' نفر)' : ''}</div>
+    <div class="charts-grid"><div class="chart-box"><canvas id="gradeBarChart" height="220"></canvas></div><div class="chart-box"><canvas id="courseDonutChart" height="220"></canvas></div></div>
+  </div>`;
+}
+function renderCharts(){
+  const stats = computeDashboardStats(window._dashDate || '');
+  const barCtx = document.getElementById('gradeBarChart'), donutCtx = document.getElementById('courseDonutChart');
+  if(!barCtx || !donutCtx || typeof Chart==='undefined') return;
+  if(CHARTS.bar) CHARTS.bar.destroy();
+  if(CHARTS.donut) CHARTS.donut.destroy();
+  const gradeColors = ['#1B2E3C','#3E5568','#A63D40','#B08D2B','#3F6B4F','#6B4E9C'];
+  CHARTS.bar = new Chart(barCtx, { type:'bar', data:{ labels: GRADES.map(g=>'پایه '+g), datasets:[{ label:'تعداد ثبت‌نام', data: GRADES.map(g=>stats.byGrade[g]||0), backgroundColor: gradeColors, borderRadius:4 }] }, options:{ responsive:true, plugins:{ legend:{display:false}, title:{display:true, text:'ثبت‌نام به تفکیک پایه', font:{family:'Vazirmatn', size:13} } }, scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } } } });
+  const courseColors = ['#A63D40','#3E5568','#3F6B4F'];
+  CHARTS.donut = new Chart(donutCtx, { type:'doughnut', data:{ labels: COURSES, datasets:[{ data: COURSES.map(c=>stats.byCourse[c]||0), backgroundColor: courseColors }] }, options:{ responsive:true, plugins:{ legend:{position:'bottom', labels:{font:{family:'Vazirmatn'}}}, title:{display:true, text:'سهم هر دوره', font:{family:'Vazirmatn', size:13} } } } });
+}
+
+/* ---------- ADMIN PANEL ---------- */
+function renderAdminPanel(){
+  return `
+  <div class="card">
+    <h2>تنظیم محل برگزاری (محدودیت جغرافیایی)</h2>
+    <p class="sub">برای تنظیم دقیق، از همان محل برگزاری این صفحه را باز کنید و روی دکمه‌ی زیر بزنید.</p>
+    <div id="venueCurrentBox" class="info-line">در حال بارگذاری تنظیمات فعلی…</div>
+    <div class="grid2">
+      <div><label>عرض جغرافیایی (lat)</label><input type="text" id="venueLat"></div>
+      <div><label>طول جغرافیایی (lng)</label><input type="text" id="venueLng"></div>
+    </div>
+    <label>شعاع مجاز (متر)</label>
+    <input type="text" id="venueRadius" value="200">
+    <button class="ghost-btn" id="useMyLocationBtn" style="margin-top:8px;">📍 استفاده از موقعیت فعلی من</button>
+    <button class="primary-btn" id="saveVenueBtn">ذخیره تنظیمات مکان</button>
+    <div id="venueMsg"></div>
+  </div>
+  <div class="card">
+    <h2>مدیریت حساب‌های مدیر</h2>
+    <div id="adminListBox" class="info-line">در حال بارگذاری فهرست مدیران…</div>
+    <div class="grid2">
+      <div><label>نام کاربری جدید</label><input type="text" id="newAdminUsername"></div>
+      <div><label>رمز عبور</label><input type="password" id="newAdminPassword"></div>
+    </div>
+    <button class="primary-btn" id="createAdminBtn">افزودن مدیر</button>
+    <div id="createAdminMsg"></div>
+  </div>`;
+}
+async function initAdminPanel(){
+  try{
+    const res = await fetch('/api/venue');
+    const cfg = await res.json();
+    const latEl=document.getElementById('venueLat'), lngEl=document.getElementById('venueLng'), radEl=document.getElementById('venueRadius');
+    if(latEl) latEl.value = cfg.venueLat; if(lngEl) lngEl.value = cfg.venueLng; if(radEl) radEl.value = cfg.radiusMeters;
+    const box = document.getElementById('venueCurrentBox');
+    if(box) box.textContent = `مکان فعلی: ${cfg.venueLat}, ${cfg.venueLng} — شعاع ${cfg.radiusMeters} متر`;
+  }catch(e){}
+  loadAdminList();
+}
+async function loadAdminList(){
+  try{
+    const res = await fetch('/api/admin/list-admins', {headers: authHeaders()});
+    if(res.status===401){ adminLogout(); return; }
+    const data = await res.json();
+    const box = document.getElementById('adminListBox');
+    if(box) box.innerHTML = 'مدیران فعلی: ' + data.admins.map(u=>`<b>${u}</b>`).join('، ');
+  }catch(e){ console.error(e); }
+}
+
+/* ---------- ADMIN AUTH UI ---------- */
+function renderAdminBar(){
+  if(ADMIN_TOKEN) return `<div class="admin-bar">👤 <b>${ADMIN_USERNAME}</b><button class="ghost-btn" id="adminLogoutBtn">خروج مدیر</button></div>`;
+  if(SHOW_LOGIN) return `<div class="admin-bar">
+    <input type="text" id="loginUsername" placeholder="نام کاربری">
+    <input type="password" id="loginPassword" placeholder="رمز عبور">
+    <button class="ghost-btn" id="loginSubmitBtn">ورود</button>
+    <button class="ghost-btn" id="loginCancelBtn">انصراف</button>
+    <div id="loginError" class="err"></div>
+  </div>`;
+  return `<div class="admin-bar"><button class="ghost-btn" id="adminLoginToggle">ورود مدیر</button></div>`;
+}
+function adminLogout(){
+  if(ADMIN_TOKEN){ fetch('/api/logout', {method:'POST', headers: authHeaders()}).catch(()=>{}); }
+  ADMIN_TOKEN=null; ADMIN_USERNAME='';
+  localStorage.removeItem('adminToken'); localStorage.removeItem('adminUsername');
+  ACTIVE_TAB='checkin';
+  render();
+}
+async function loadAdminData(){
+  if(!ADMIN_TOKEN) return;
+  try{
+    const res = await fetch('/api/data', {headers: authHeaders()});
+    if(res.status===401){ adminLogout(); return; }
+    ADMIN_DATA = await res.json();
+    ADMIN_DATA.records = ADMIN_DATA.records || [];
+    ADMIN_DATA.teacherProfiles = ADMIN_DATA.teacherProfiles || {};
+  }catch(e){ console.error(e); }
+}
+
+/* ---------- MAIN RENDER ---------- */
+function render(){
+  document.getElementById('adminBar').innerHTML = renderAdminBar();
+  document.getElementById('tabs').style.display = ADMIN_TOKEN ? 'flex' : 'none';
+  document.querySelectorAll('#tabs button').forEach(b=>{ b.classList.toggle('active', b.dataset.tab===ACTIVE_TAB); });
+  const app = document.getElementById('app');
+  if(ACTIVE_TAB==='checkin') app.innerHTML = renderCheckin();
+  else if(ACTIVE_TAB==='codes' && ADMIN_TOKEN) app.innerHTML = renderCodes();
+  else if(ACTIVE_TAB==='report' && ADMIN_TOKEN) app.innerHTML = renderReport();
+  else if(ACTIVE_TAB==='dashboard' && ADMIN_TOKEN){ app.innerHTML = renderDashboard(); setTimeout(renderCharts, 0); }
+  else if(ACTIVE_TAB==='admin' && ADMIN_TOKEN){ app.innerHTML = renderAdminPanel(); initAdminPanel(); }
+  else { ACTIVE_TAB = 'checkin'; app.innerHTML = renderCheckin(); }
+  bindEvents();
+}
+
+/* ---------- EVENTS ---------- */
+function bindEvents(){
+  document.querySelectorAll('#tabs button').forEach(b=>{
+    b.onclick = async ()=>{
+      ACTIVE_TAB = b.dataset.tab;
+      if(ACTIVE_TAB==='report' || ACTIVE_TAB==='dashboard') await loadAdminData();
+      render();
+    };
+  });
+
+  const retryBtn = document.getElementById('retryLocation');
+  if(retryBtn) retryBtn.onclick = ()=> requestLocation();
+
+  document.querySelectorAll('#periodRow input, #courseRow input').forEach(inp=>{
+    inp.onchange = ()=>{ inp.closest('.radio-row').querySelectorAll('label').forEach(l=>l.classList.remove('checked')); inp.closest('label').classList.add('checked'); };
+  });
+
+  const lastNameField = document.getElementById('lastName');
+  if(lastNameField) lastNameField.addEventListener('blur', async ()=>{
+    const first = document.getElementById('firstName').value.trim();
+    const last = lastNameField.value.trim();
+    if(!first || !last) return;
+    const fullName = first + ' ' + last;
+    const note = document.getElementById('reuseNote');
+    let profile = null;
+    try{
+      const res = await fetch('/api/lookup', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({fullName})});
+      const result = await res.json();
+      profile = result.profile;
+    }catch(e){}
+    if(!profile){ if(note) note.innerHTML=''; return; }
+    const map = {personnelCode:'personnelCode', nationalCode:'nationalCode', gender:'gender', birthDate:'birthDate', maritalStatus:'maritalStatus', orgPosition:'orgPosition', grade:'grade', degree:'degree', teachingExperience:'teachingExperience', phone:'phone', workAddress:'workAddress', homeAddress:'homeAddress'};
+    Object.keys(map).forEach(id=>{ const el = document.getElementById(id); if(el && profile[map[id]]) el.value = profile[map[id]]; });
+    if(note){
+      note.innerHTML = `اطلاعات فردی شما از ثبت‌نام قبلی پر شد. <button type="button" id="unlockFields" class="ghost-btn" style="padding:3px 8px; font-size:11px;">ویرایش</button>`;
+      Object.keys(map).forEach(id=>{ const el = document.getElementById(id); if(el) el.style.background='var(--paper)'; });
+      document.getElementById('unlockFields').onclick = ()=>{ Object.keys(map).forEach(id=>{ const el = document.getElementById(id); if(el) el.style.background='#fff'; }); note.innerHTML=''; };
+    }
+  });
+
+  const submitBtn = document.getElementById('submitBtn');
+  if(submitBtn) submitBtn.onclick = async ()=>{
+    const box = document.getElementById('confirmBox');
+    if(!isWithinRange()){ box.innerHTML = `<div class="warn">شما خارج از محدوده‌ی مجاز هستید؛ ثبت‌نام امکان‌پذیر نیست.</div>`; return; }
+    const val = id => document.getElementById(id).value.trim();
+    const period = document.querySelector('#periodRow input:checked');
+    const course = document.querySelector('#courseRow input:checked');
+    const payload = {
+      firstName: val('firstName'), lastName: val('lastName'),
+      personnelCode: toEnglishDigits(val('personnelCode')), nationalCode: toEnglishDigits(val('nationalCode')),
+      gender: val('gender'), birthDate: val('birthDate'), maritalStatus: val('maritalStatus'), orgPosition: val('orgPosition'),
+      grade: val('grade'), sessionDate: val('sessionDate'), period: period?period.value:'', course: course?course.value:'',
+      instructor: val('instructor'), degree: val('degree'), teachingExperience: val('teachingExperience'),
+      phone: toEnglishDigits(val('phone')), workAddress: val('workAddress'), homeAddress: val('homeAddress'),
+      lat: USER_LOCATION.lat, lng: USER_LOCATION.lng,
+    };
+    const required = ['firstName','lastName','personnelCode','nationalCode','gender','birthDate','maritalStatus','orgPosition','grade','sessionDate','period','course','instructor','degree','teachingExperience','phone','workAddress','homeAddress'];
+    const missing = required.filter(k=> !payload[k]);
+    if(missing.length){ box.innerHTML = `<div class="warn">لطفاً همه‌ی فیلدها را تکمیل کنید (${missing.length} فیلد ناقص).</div>`; return; }
+    if(!/^\d{10}$/.test(payload.nationalCode)){ box.innerHTML = `<div class="warn">کد ملی باید دقیقاً ۱۰ رقم باشد.</div>`; return; }
+
+    submitBtn.disabled = true;
+    try{
+      const resp = await fetch('/api/checkin', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      const result = await resp.json();
+      if(result.status === 'duplicate'){
+        box.innerHTML = `<div class="confirm">حضور شما قبلاً برای همین تاریخ و زنگ ثبت شده — نیازی به ثبت دوباره نیست.</div>`;
+      } else if(result.status === 'out_of_range'){
+        box.innerHTML = `<div class="warn">فاصله‌ی شما تا محل برگزاری حدود ${toFa(result.distance)} متر است — بیش از محدوده‌ی مجاز (${toFa(result.allowed)} متر). ثبت‌نام انجام نشد.</div>`;
+      } else {
+        const rec = result.record || {};
+        const lateNote = rec.status === 'تأخیر' ? ` — با تأخیر ${toFa(rec.delayMinutes)} دقیقه ثبت شد` : '';
+        box.innerHTML = `<div class="confirm">✅ حضور شما ثبت شد${lateNote} — ${new Date().toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'})}</div>`;
+      }
+    }catch(e){ box.innerHTML = `<div class="warn">اتصال به سرور برقرار نشد. دوباره تلاش کنید.</div>`; }
+    submitBtn.disabled = false;
+  };
+
+  ['filterGrade','filterDate','filterCourse'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.onchange = ()=>{ const f = getReportFilters(); if(id==='filterGrade') f.grade=el.value; if(id==='filterDate') f.date=el.value; if(id==='filterCourse') f.course=el.value; window._reportFilters=f; render(); };
+  });
+  const exportBtn = document.getElementById('exportExcel');
+  if(exportBtn) exportBtn.onclick = ()=> exportReportExcel();
+
+  const dashDateEl = document.getElementById('dashDate');
+  if(dashDateEl) dashDateEl.onchange = ()=>{ window._dashDate = dashDateEl.value; render(); };
+  const exportDashExcelBtn = document.getElementById('exportDashExcel');
+  if(exportDashExcelBtn) exportDashExcelBtn.onclick = ()=> exportDashboardExcel();
+  const exportDashPdfBtn = document.getElementById('exportDashPdf');
+  if(exportDashPdfBtn) exportDashPdfBtn.onclick = ()=> exportDashboardPdf();
+
+  const loginToggle = document.getElementById('adminLoginToggle');
+  if(loginToggle) loginToggle.onclick = ()=>{ SHOW_LOGIN=true; render(); };
+  const loginCancel = document.getElementById('loginCancelBtn');
+  if(loginCancel) loginCancel.onclick = ()=>{ SHOW_LOGIN=false; render(); };
+  const loginSubmit = document.getElementById('loginSubmitBtn');
+  if(loginSubmit) loginSubmit.onclick = async ()=>{
+    const u = document.getElementById('loginUsername').value.trim();
+    const p = document.getElementById('loginPassword').value;
+    const errBox = document.getElementById('loginError');
+    try{
+      const res = await fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username:u, password:p})});
+      const result = await res.json();
+      if(result.status==='ok'){
+        ADMIN_TOKEN = result.token; ADMIN_USERNAME = u;
+        localStorage.setItem('adminToken', ADMIN_TOKEN); localStorage.setItem('adminUsername', ADMIN_USERNAME);
+        SHOW_LOGIN = false; ACTIVE_TAB = 'report';
+        await loadAdminData(); render();
+      } else { errBox.textContent = result.message || 'ورود ناموفق بود'; }
+    }catch(e){ errBox.textContent = 'خطا در اتصال به سرور'; }
+  };
+  const logoutBtn = document.getElementById('adminLogoutBtn');
+  if(logoutBtn) logoutBtn.onclick = ()=> adminLogout();
+
+  const useMyLocationBtn = document.getElementById('useMyLocationBtn');
+  if(useMyLocationBtn) useMyLocationBtn.onclick = ()=>{
+    if(!navigator.geolocation){ alert('مرورگر از موقعیت مکانی پشتیبانی نمی‌کند'); return; }
+    navigator.geolocation.getCurrentPosition(pos=>{
+      document.getElementById('venueLat').value = pos.coords.latitude;
+      document.getElementById('venueLng').value = pos.coords.longitude;
+    }, ()=> alert('دریافت موقعیت ناموفق بود'));
+  };
+  const saveVenueBtn = document.getElementById('saveVenueBtn');
+  if(saveVenueBtn) saveVenueBtn.onclick = async ()=>{
+    const lat = parseFloat(document.getElementById('venueLat').value);
+    const lng = parseFloat(document.getElementById('venueLng').value);
+    const radius = parseFloat(document.getElementById('venueRadius').value);
+    const msg = document.getElementById('venueMsg');
+    if(isNaN(lat)||isNaN(lng)||isNaN(radius)){ msg.innerHTML='<div class="warn">مقادیر را درست وارد کنید</div>'; return; }
+    try{
+      const res = await fetch('/api/admin/venue', {method:'POST', headers:Object.assign({'Content-Type':'application/json'}, authHeaders()), body: JSON.stringify({venueLat:lat, venueLng:lng, radiusMeters:radius})});
+      if(res.status===401){ adminLogout(); return; }
+      const result = await res.json();
+      if(result.status==='ok'){ msg.innerHTML='<div class="confirm">ذخیره شد.</div>'; VENUE_CONFIG = {venueLat:lat, venueLng:lng, radiusMeters:radius}; }
+    }catch(e){ msg.innerHTML='<div class="warn">خطا در اتصال</div>'; }
+  };
+  const createAdminBtn = document.getElementById('createAdminBtn');
+  if(createAdminBtn) createAdminBtn.onclick = async ()=>{
+    const u = document.getElementById('newAdminUsername').value.trim();
+    const p = document.getElementById('newAdminPassword').value;
+    const msg = document.getElementById('createAdminMsg');
+    if(!u || !p){ msg.innerHTML = '<div class="warn">نام کاربری و رمز عبور را وارد کنید.</div>'; return; }
+    try{
+      const res = await fetch('/api/admin/create-admin', {method:'POST', headers:Object.assign({'Content-Type':'application/json'}, authHeaders()), body: JSON.stringify({username:u, password:p})});
+      if(res.status===401){ adminLogout(); return; }
+      const result = await res.json();
+      if(result.status==='ok'){ msg.innerHTML = '<div class="confirm">مدیر جدید اضافه شد.</div>'; loadAdminList(); }
+      else { msg.innerHTML = `<div class="warn">${result.message}</div>`; }
+    }catch(e){ msg.innerHTML = '<div class="warn">خطا در اتصال</div>'; }
+  };
+}
+
+/* ---------- EXPORTS ---------- */
+async function exportReportExcel(){
+  const f = getReportFilters();
+  const rows = filteredRecords(f).slice().sort((a,b)=> a.submittedAt.localeCompare(b.submittedAt));
+  const wb = new ExcelJS.Workbook();
+  const sheet = wb.addWorksheet('حضور و غیاب', { views:[{ rightToLeft:true, state:'frozen', xSplit:9, ySplit:1 }] });
+  sheet.columns = ALL_COLS.map(c=>({ header:c.label, key:c.key, width: Math.max(10, Math.round(c.width/6)) }));
+  rows.forEach((r,i)=>{
+    const period = PERIODS.find(p=>p.id===r.period);
+    const dateInfo = SESSION_DATES.find(d=>d.jalali===r.sessionDate);
+    const statusText = r.status==='تأخیر' ? `تأخیر (${r.delayMinutes} دقیقه)` : (r.status==='حاضر' ? 'حاضر' : 'ثبت‌شده');
+    const row = sheet.addRow({
+      row:i+1, firstName:r.firstName, lastName:r.lastName, grade:r.grade, sessionDateLabel: dateInfo?dateInfo.label:r.sessionDate,
+      periodLabel: period?period.label:r.period, course:r.course, instructor:r.instructor, statusLabel: statusText,
+      personnelCode:r.personnelCode, nationalCode:r.nationalCode, gender:r.gender, birthDate:r.birthDate, maritalStatus:r.maritalStatus,
+      orgPosition:r.orgPosition, degree:r.degree, teachingExperience:r.teachingExperience, phone:r.phone,
+      workAddress:r.workAddress, homeAddress:r.homeAddress, submittedTime: new Date(r.submittedAt).toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'}),
+      distanceMeters: r.distanceMeters ?? '',
+    });
+    const isEven = i % 2 === 0;
+    row.eachCell(cell=>{
+      cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb: isEven ? 'FFEFF4EF' : 'FFFFFFFF' } };
+      cell.border = { top:{style:'thin',color:{argb:'FFD7DCD4'}}, bottom:{style:'thin',color:{argb:'FFD7DCD4'}}, left:{style:'thin',color:{argb:'FFD7DCD4'}}, right:{style:'thin',color:{argb:'FFD7DCD4'}} };
+      cell.alignment = { horizontal:'right', vertical:'middle' };
+    });
+    const statusCell = row.getCell('statusLabel');
+    if(r.status==='تأخیر') statusCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFF6D9D6'} };
+    else if(r.status==='حاضر') statusCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFDCE8DE'} };
+  });
+  const headerRow = sheet.getRow(1);
+  headerRow.eachCell(cell=>{ cell.font = { bold:true, color:{argb:'FFFFFFFF'}, size:11 }; cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FF1B2E3C'} }; cell.alignment = { horizontal:'center', vertical:'middle' }; cell.border = { bottom:{style:'medium', color:{argb:'FFB08D2B'}} }; });
+  headerRow.height = 26;
+  sheet.autoFilter = { from:'A1', to: String.fromCharCode(64+ALL_COLS.length) + '1' };
+  const buffer = await wb.xlsx.writeBuffer();
+  downloadBlob(buffer, 'attendance-report.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+}
+async function exportDashboardExcel(){
+  const dateFilter = window._dashDate || '';
+  const stats = computeDashboardStats(dateFilter);
+  const wb = new ExcelJS.Workbook();
+  const sheet = wb.addWorksheet('داشبورد', { views:[{ rightToLeft:true }] });
+  sheet.columns = [{width:26},{width:16}];
+  sheet.mergeCells('A1:B1');
+  const titleCell = sheet.getCell('A1');
+  titleCell.value = 'داشبورد حضور و غیاب — ' + (dateFilter ? (SESSION_DATES.find(d=>d.jalali===dateFilter)||{}).label : 'همه‌ی تاریخ‌ها');
+  titleCell.font = { bold:true, size:14, color:{argb:'FFFFFFFF'} };
+  titleCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FF1B2E3C'} };
+  titleCell.alignment = { horizontal:'center', vertical:'middle' };
+  sheet.getRow(1).height = 26;
+  let r = 3;
+  [['کل ثبت‌نام‌ها', stats.total], ['حاضر به‌موقع', stats.onTime], ['با تأخیر', stats.late], ['درصد به‌موقع بودن', stats.pct + '٪']].forEach(([label,val])=>{
+    sheet.getCell('A'+r).value = label; sheet.getCell('B'+r).value = val;
+    sheet.getCell('A'+r).font = { bold:true }; sheet.getCell('A'+r).fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFEFF4EF'} };
+    r++;
+  });
+  r += 1;
+  sheet.mergeCells('A'+r+':B'+r); sheet.getCell('A'+r).value = 'به تفکیک پایه';
+  sheet.getCell('A'+r).font = { bold:true, color:{argb:'FFFFFFFF'} }; sheet.getCell('A'+r).fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FF3E5568'} };
+  r++;
+  GRADES.forEach(g=>{ sheet.getCell('A'+r).value = 'پایه '+g; sheet.getCell('B'+r).value = stats.byGrade[g]||0; r++; });
+  r += 1;
+  sheet.mergeCells('A'+r+':B'+r); sheet.getCell('A'+r).value = 'به تفکیک دوره';
+  sheet.getCell('A'+r).font = { bold:true, color:{argb:'FFFFFFFF'} }; sheet.getCell('A'+r).fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FF3E5568'} };
+  r++;
+  const courseColorsHex = ['FFF6D9D6','FFDCE3EE','FFDCE8DE'];
+  COURSES.forEach((c,i)=>{
+    sheet.getCell('A'+r).value = c; sheet.getCell('B'+r).value = stats.byCourse[c]||0;
+    sheet.getCell('A'+r).fill = { type:'pattern', pattern:'solid', fgColor:{argb:courseColorsHex[i]} };
+    sheet.getCell('B'+r).fill = { type:'pattern', pattern:'solid', fgColor:{argb:courseColorsHex[i]} };
+    r++;
+  });
+  sheet.eachRow(row=> row.eachCell(cell=>{ cell.border = { top:{style:'thin',color:{argb:'FFD7DCD4'}}, bottom:{style:'thin',color:{argb:'FFD7DCD4'}}, left:{style:'thin',color:{argb:'FFD7DCD4'}}, right:{style:'thin',color:{argb:'FFD7DCD4'}} }; if(!cell.alignment) cell.alignment = { horizontal:'right', vertical:'middle' }; }));
+  const buffer = await wb.xlsx.writeBuffer();
+  downloadBlob(buffer, 'dashboard-summary.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+}
+async function exportDashboardPdf(){
+  const target = document.getElementById('dashboardCapture');
+  if(!target || typeof html2canvas==='undefined' || typeof window.jspdf==='undefined') return;
+  const canvas = await html2canvas(target, { scale:2, backgroundColor:'#ffffff' });
+  const imgData = canvas.toDataURL('image/png');
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation:'landscape', unit:'pt', format:'a4' });
+  const pageWidth = pdf.internal.pageSize.getWidth(), pageHeight = pdf.internal.pageSize.getHeight();
+  const ratio = canvas.height / canvas.width;
+  let w = pageWidth - 40, h = w * ratio;
+  if(h > pageHeight - 40){ h = pageHeight - 40; w = h / ratio; }
+  pdf.addImage(imgData, 'PNG', (pageWidth-w)/2, 20, w, h);
+  pdf.save('dashboard.pdf');
+}
+
+/* ---------- INIT ---------- */
+(async function init(){
+  await loadVenueConfig();
+  requestLocation();
+  if(ADMIN_TOKEN) await loadAdminData();
+  render();
+})();
+</script>
+</body>
+</html>
